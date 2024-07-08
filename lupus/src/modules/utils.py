@@ -212,10 +212,8 @@ def svm(X_train, y_train):
     '''
     Creates and trains an SVM standard DQN model
     '''
-    mmc = MinMaxScaler()
-    X_train_norm = mmc.fit_transform(X_train)
-    svm_model = SVC(kernel='rbf', C=1, decision_function_shape='ovo', random_state=constants.SEED).fit(X_train_norm, y_train)
-    return svm_model, mmc
+    svm_model = SVC(kernel='rbf', C=1, decision_function_shape='ovo', random_state=constants.SEED).fit(X_train, y_train)
+    return svm_model
 
 def ffnn(X_train, y_train, X_val, y_val):
     '''

@@ -14,6 +14,9 @@ import xgboost
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 from sklearn.metrics import confusion_matrix, classification_report
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 # from stable_baselines import bench, logger
 # from stable_baselines.common.callbacks import CheckpointCallback
 # import tensorflow
@@ -145,6 +148,22 @@ def svm(X_train, y_train):
     svm_model = SVC(kernel='poly', C=100, decision_function_shape='ovo', random_state=constants.SEED).fit(X_train_norm, y_train)
     return svm_model, mmc
 
+def ffnn(X_train, y_train, X_val, y_val):
+    '''
+    Creates and trains a Feed-Forward NN
+    '''
+
+    model = keras.Sequential([
+    layers.Dense(64, activation='relu', input_shape=(X_train.shape[0],)),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(8, activation='softmax')
+    ])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    checkpoint = keras.callbacks.ModelCheckpoint('../../models/ffnn_checkpoint.h5', monitor='val_loss', save_best_only=True, save_weights_only=False)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=200)
+    history = model.fit(X_train, y_train_onehot, epochs=1000, batch_size=32, validation_data=(X_val, y_val), callbacks=[checkpoint, early_stopping])
+    return model
+
 def evaluate_sota_model(model, X_test, y_test, is_svm=False, mmc=None):
     '''
     Evaluates a state-of-the-art model
@@ -160,6 +179,15 @@ def evaluate_sota_model(model, X_test, y_test, is_svm=False, mmc=None):
     test_df['y_actual'] = y_test
     test_df['y_pred'] = y_pred
     return test_df
+
+def evaluate_ffnn(model, X_test, y_test):
+    model_predictions = best_model.predict(X_test)
+    y_pred = np.argmax(model_predictions, axis=1)
+    accuracy = accuracy_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred, average='macro')
+    roc_auc = roc_auc_score(y_test, model_predictions, average='macro', multi_class='ovr')
+    return accuracy, f1, roc_auc
+
 
 
 

@@ -192,3 +192,42 @@ def get_val_metrics(model, X_val, y_val):
     min_sample_pathway = val_df[val_df.episode_length==min_path_length].trajectory.iloc[0]
     max_sample_pathway = val_df[val_df.episode_length==max_path_length].trajectory.iloc[0]
     return pathway_score, wpahm_score, acc, f1, roc_auc, min_path_length, average_path_length, max_path_length, min_sample_pathway, max_sample_pathway
+
+
+def rf(X_train, y_train):
+    '''
+    Creates and trains a random forest model
+    '''
+    rf = RandomForestClassifier(random_state=constants.SEED).fit(X_train, y_train)
+    return rf
+
+def dt(X_train, y_train):
+    '''
+    Creates and trains a decision tree model
+    '''
+    dt = DecisionTreeClassifier(random_state=constants.SEED).fit(X_train, y_train)
+    return dt
+
+def svm(X_train, y_train):
+    '''
+    Creates and trains an SVM standard DQN model
+    '''
+    mmc = MinMaxScaler()
+    X_train_norm = mmc.fit_transform(X_train)
+    svm_model = SVC(kernel='rbf', C=1, decision_function_shape='ovo', random_state=constants.SEED).fit(X_train_norm, y_train)
+    return svm_model, mmc
+
+def ffnn(X_train, y_train, X_val, y_val):
+    '''
+    Creates and trains a Feed-Forward NN
+    '''
+    model = keras.Sequential([
+    layers.Dense(64, activation='relu', input_shape=(X_train.shape[0],)),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(constants.CLASS_NUM, activation='softmax')
+    ])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    checkpoint = keras.callbacks.ModelCheckpoint('../../models/ffnn_lupus_checkpoint.h5', monitor='val_acc', save_best_only=True, save_weights_only=False)
+    early_stopping = EarlyStopping(monitor='val_acc', patience=200)
+    history = model.fit(X_train, y_train, epochs=1000, batch_size=32, validation_data=(X_val, y_val), callbacks=[checkpoint, early_stopping])
+    return model

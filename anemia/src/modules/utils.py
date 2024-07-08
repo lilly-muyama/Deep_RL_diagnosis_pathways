@@ -155,12 +155,12 @@ def ffnn(X_train, y_train, X_val, y_val):
     model = keras.Sequential([
     layers.Dense(64, activation='relu', input_shape=(X_train.shape[0],)),
     layers.Dense(64, activation='relu'),
-    layers.Dense(8, activation='softmax')
+    layers.Dense(constants.CLASS_NUM, activation='softmax')
     ])
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    checkpoint = keras.callbacks.ModelCheckpoint('../../models/ffnn_checkpoint.h5', monitor='val_loss', save_best_only=True, save_weights_only=False)
+    checkpoint = keras.callbacks.ModelCheckpoint('../../models/ffnn_anem_checkpoint.h5', monitor='val_loss', save_best_only=True, save_weights_only=False)
     early_stopping = EarlyStopping(monitor='val_loss', patience=200)
-    history = model.fit(X_train, y_train_onehot, epochs=1000, batch_size=32, validation_data=(X_val, y_val), callbacks=[checkpoint, early_stopping])
+    history = model.fit(X_train, y_train, epochs=1000, batch_size=32, validation_data=(X_val, y_val), callbacks=[checkpoint, early_stopping])
     return model
 
 def evaluate_sota_model(model, X_test, y_test, is_svm=False, mmc=None):

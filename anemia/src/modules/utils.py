@@ -152,7 +152,6 @@ def ffnn(X_train, y_train, X_val, y_val):
     '''
     Creates and trains a Feed-Forward NN
     '''
-
     model = keras.Sequential([
     layers.Dense(64, activation='relu', input_shape=(X_train.shape[0],)),
     layers.Dense(64, activation='relu'),
@@ -181,6 +180,9 @@ def evaluate_sota_model(model, X_test, y_test, is_svm=False, mmc=None):
     return test_df
 
 def evaluate_ffnn(model, X_test, y_test):
+    '''
+    Evaluates FFNN model
+    '''
     model_predictions = best_model.predict(X_test)
     y_pred = np.argmax(model_predictions, axis=1)
     accuracy = accuracy_score(y_test, y_pred)

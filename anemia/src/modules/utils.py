@@ -1,4 +1,4 @@
-from stable_baselines import DQN
+from stable_baselines import DQN, PPO2
 from modules.env import AnemiaEnv
 from modules import constants
 import pandas as pd
@@ -17,10 +17,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
-# from stable_baselines import bench, logger
-# from stable_baselines.common.callbacks import CheckpointCallback
-# import tensorflow
-
+from stable_baselines.bench import Monitor
 # tensorflow.set_random_seed(constants.SEED)
 
 
@@ -39,6 +36,19 @@ def create_env(X, y, random=True):
     '''
     env = AnemiaEnv(X, y, random)
     return env
+    
+def stable_ppo(X_train, y_train, timesteps, save=False, filename=None):
+    '''
+    Creates and trains a PPO Model
+    '''
+    training_env = create_env(X_train, y_train)
+    # training_env = Monitor(training_env, log_dir)
+    model = PPO2('MlpPolicy', training_env, verbose=1, seed=constants.SEED, learning_rate=0.0001, n_cpu_tf_sess=1, ent_coef=0.02)
+    model.learn(total_timesteps=timesteps, log_interval=100000)
+    if save:
+        model.save(f'{filename}.pkl')
+    training_env.close()
+    return model
 
 def stable_vanilla_dqn(X_train, y_train, timesteps, save=False, filename=None, per=False):
     '''

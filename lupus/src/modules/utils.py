@@ -7,7 +7,7 @@ import pandas as pd
 from modules.env import LupusEnv
 from modules.constants import constants
 import tensorflow as tf
-from stable_baselines import DQN
+from stable_baselines import DQN, PPO2
 from stable_baselines.common.callbacks import CheckpointCallback
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
@@ -60,6 +60,22 @@ def create_env(X, y, random=True):
     env = LupusEnv(X, y, random)
     print(f'The environment seed is {env.seed()}') #to delete
     return env
+    
+def stable_ppo(X_train, y_train, timesteps, save=False, log_path=None, log_prefix='ppo', filename=None):
+    '''
+    Creates and trains a standard PPO Model
+    '''
+    training_env = create_env(X_train, y_train)
+    # training_env = Monitor(training_env, log_dir)
+    model = PPO2('MlpPolicy', training_env, verbose=1, seed=constants.SEED, learning_rate=0.0001, n_cpu_tf_sess=1)
+    checkpoint_callback = CheckpointCallback(save_freq=constants.CHECKPOINT_FREQ, save_path=log_path, name_prefix=log_prefix)
+    model.learn(total_timesteps=timesteps, log_interval=100000, callback=checkpoint_callback)
+
+    if save:
+        model.save(f'{log_path}/{filename}.pkl')
+    training_env.close()
+    return model
+
 
 def stable_vanilla_dqn(X_train, y_train, timesteps, save=False, log_path=None, log_prefix='dqn', filename=None, per=False):
     '''
